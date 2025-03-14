@@ -135,7 +135,7 @@
         </thead>
         <tbody>
             {% for fiche in fiches %}
-            <tr class="etat-{{ fiche.État|lower|replace(' ', '-') }}" data-etat="{{ fiche.État }}" data-date="{{ fiche['Date de création'] }}">
+            <tr class="{% if fiche.État == 'Gagnée' %}etat-gagnee{% elif fiche.État == 'En cours' %}etat-en-cours{% elif fiche.État == 'Piste identifiée' %}etat-piste-identifiee{% elif fiche.État == 'Fermée' %}etat-fermee{% endif %}"
                 <td>{{ fiche.Titre }}</td>
                 <td>{{ fiche.Référence }}</td>
                 <td>{{ fiche["Date de création"] }}</td>
