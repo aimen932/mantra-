@@ -27,7 +27,7 @@
             margin: auto;
             border-collapse: collapse;
             background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
         th, td {
             padding: 12px;
@@ -38,10 +38,11 @@
             background-color: #343a40;
             color: white;
         }
-        .etat-gagnee { background-color: rgba(40, 167, 69, 0.5); }
-        .etat-en-cours { background-color: rgba(0, 123, 255, 0.5); }
-        .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.5); }
-        .etat-fermee { background-color: rgba(255, 0, 0, 0.5); }
+        /* 🔹 Couleurs selon l'état */
+        .etat-gagnee { background-color: rgba(40, 167, 69, 0.5); } /* Vert pâle */
+        .etat-en-cours { background-color: rgba(0, 123, 255, 0.5); } /* Bleu pâle */
+        .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.5); } /* Orange pâle */
+        .etat-fermee { background-color: rgba(255, 0, 0, 0.5); } /* Rouge pâle */
     </style>
 
     <script>
@@ -51,32 +52,44 @@
                 .then(data => {
                     if (data.success) {
                         alert('Les fiches de poste ont été mises à jour avec succès !');
-                        location.reload();
+                        location.reload();  // 🔄 Rechargement correct de la page
                     } else {
                         alert('Erreur lors de la mise à jour : ' + data.error);
                     }
                 })
                 .catch(error => alert('Erreur de connexion au serveur : ' + error));
-        }
-
+        }        
+        
         function filterFiches() {
             let selectedEtats = Array.from(document.getElementById("etatFilter").selectedOptions).map(option => option.value);
             let dateFilter = document.getElementById("dateFilter").value;
+            let rows = document.querySelectorAll("tbody tr");
 
-            document.querySelectorAll("tbody tr").forEach(row => {
-                let etatMatch = selectedEtats.length === 0 || selectedEtats.includes(row.dataset.etat);
-                let dateMatch = dateFilter === "" || row.dataset.date === dateFilter;
+            rows.forEach(row => {
+                let rowEtat = row.getAttribute("data-etat");
+                let rowDate = row.getAttribute("data-date");
 
-                row.style.display = etatMatch && dateMatch ? "" : "none";
+                let etatMatch = (selectedEtats.length === 0 || selectedEtats.includes(rowEtat));
+                let dateMatch = (dateFilter === "" || rowDate === dateFilter);
+
+                if (etatMatch && dateMatch) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
             });
         }
 
         function sortFiches() {
-            const ordre = {"En cours": 1, "Piste identifiée": 2, "Gagnée": 3, "Fermée": 4};
-            const tbody = document.querySelector("tbody");
-            [...tbody.rows]
-                .sort((a, b) => ordre[a.dataset.etat] - ordre[b.dataset.etat])
-                .forEach(row => tbody.appendChild(row));
+            let tbody = document.querySelector("tbody");
+            let rows = Array.from(tbody.rows);
+
+            rows.sort((a, b) => {
+                const ordre = { "En cours": 1, "Piste identifiée": 2, "Gagnée": 3, "Fermée": 4 };
+                return ordre[a.getAttribute("data-etat")] - ordre[b.getAttribute("data-etat")];
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
         }
 
         function downloadExcel() {
@@ -90,7 +103,10 @@
     <button onclick="updateFiches()">🔄 Mettre à jour les fiches</button>
     <button onclick="sortFiches()">📊 Trier par Priorité</button>
     <button onclick="downloadExcel()">📥 Télécharger Excel</button>
+    
+    <br><br>
 
+    <!-- 🔥 Filtres 🔥 -->
     <div class="filters">
         <label for="etatFilter">📌 Filtrer par État :</label>
         <select id="etatFilter" multiple onchange="filterFiches()">
@@ -104,6 +120,7 @@
         <input type="date" id="dateFilter" onchange="filterFiches()">
     </div>
 
+    <!-- 📊 Tableau des fiches de poste -->
     <table>
         <thead>
             <tr>
@@ -119,7 +136,14 @@
         </thead>
         <tbody>
             {% for fiche in fiches %}
-            <tr class="etat-{{ fiche.État|lower|replace(' ', '-') }}" data-etat="{{ fiche.État }}" data-date="{{ fiche['Date de création'] }}">
+            <tr 
+                class="{% if fiche.État == 'Gagnée' %} etat-gagnee
+                       {% elif fiche.État == 'En cours' %} etat-en-cours
+                       {% elif fiche.État == 'Piste identifiée' %} etat-piste-identifiee
+                       {% elif fiche.État == 'Fermée' %} etat-fermee
+                       {% endif %}"
+                data-etat="{{ fiche.État }}"
+                data-date="{{ fiche['Date de création'] }}">
                 <td>{{ fiche.Titre }}</td>
                 <td>{{ fiche.Référence }}</td>
                 <td>{{ fiche["Date de création"] }}</td>
