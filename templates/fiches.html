@@ -3,112 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fiches de Poste</title>
+    <title>Fiches de Poste - Mantra</title>
+    <link rel="icon" href="/static/mantra_talents_logo.jpeg" type="image/jpeg">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            margin: 20px;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #1e2148;
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .navbar img {
+            height: 50px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px;
+            transition: color 0.3s;
+        }
+        .navbar a:hover {
+            color: #6a54d1;
         }
         h1 {
-            color: #333;
+            text-align: center;
+            margin-top: 30px;
+            color: #1e2148;
         }
         .filters {
-            margin-bottom: 20px;
+            text-align: center;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: inline-block;
         }
-        label, select, input {
+        .filters select, .filters input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin: 0 10px;
+        }
+        button {
+            background-color: #6a54d1;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
             margin: 10px;
-            padding: 8px;
-            font-size: 16px;
+        }
+        button:hover {
+            background-color: #5942b3;
         }
         table {
-            width: 90%;
-            margin: auto;
+            width: 95%;
+            margin: 20px auto;
             border-collapse: collapse;
-            background: white;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         th, td {
             padding: 12px;
-            border: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
             text-align: left;
         }
         th {
-            background-color: #343a40;
+            background-color: #1e2148;
             color: white;
         }
-        /* 🔹 Couleurs selon l'état */
-        .etat-gagnee { background-color: rgba(40, 167, 69, 0.5); } /* Vert pâle */
-        .etat-en-cours { background-color: rgba(0, 123, 255, 0.5); } /* Bleu pâle */
-        .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.5); } /* Orange pâle */
-        .etat-fermee { background-color: rgba(255, 0, 0, 0.5); } /* Rouge pâle */
+        tr:hover {
+            background-color: #f1f3ff;
+        }
+        .etat-gagnee { background-color: rgba(40, 167, 69, 0.3); }
+        .etat-en-cours { background-color: rgba(0, 123, 255, 0.3); }
+        .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.3); }
+        .etat-fermee { background-color: rgba(255, 0, 0, 0.3); }
     </style>
-
-    <script>
-        function updateFiches() {
-            fetch('/update_fiches', { method: 'GET' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Les fiches de poste ont été mises à jour avec succès !');
-                        location.reload();  // 🔄 Rechargement correct de la page
-                    } else {
-                        alert('Erreur lors de la mise à jour : ' + data.error);
-                    }
-                })
-                .catch(error => alert('Erreur de connexion au serveur : ' + error));
-        }        
-        
-        function filterFiches() {
-            let selectedEtats = Array.from(document.getElementById("etatFilter").selectedOptions).map(option => option.value);
-            let dateFilter = document.getElementById("dateFilter").value;
-            let rows = document.querySelectorAll("tbody tr");
-
-            rows.forEach(row => {
-                let rowEtat = row.getAttribute("data-etat");
-                let rowDate = row.getAttribute("data-date");
-
-                let etatMatch = (selectedEtats.length === 0 || selectedEtats.includes(rowEtat));
-                let dateMatch = (dateFilter === "" || rowDate === dateFilter);
-
-                if (etatMatch && dateMatch) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-        }
-
-        function sortFiches() {
-            let tbody = document.querySelector("tbody");
-            let rows = Array.from(tbody.rows);
-
-            rows.sort((a, b) => {
-                const ordre = { "En cours": 1, "Piste identifiée": 2, "Gagnée": 3, "Fermée": 4 };
-                return ordre[a.getAttribute("data-etat")] - ordre[b.getAttribute("data-etat")];
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-        }
-
-        function downloadExcel() {
-            window.location.href = "/download_excel";
-        }
-    </script>
 </head>
 <body>
-    <h1>📋 Fiches de Poste</h1>
 
-    <button onclick="updateFiches()">🔄 Mettre à jour les fiches</button>
-    <button onclick="sortFiches()">📊 Trier par Priorité</button>
-    <button onclick="downloadExcel()">📥 Télécharger Excel</button>
-    
-    <br><br>
+    <div class="navbar">
+        <img src="/static/mantra_talents_logo.jpeg" alt="Mantra Logo">
+        <a href="/">Accueil</a>
+        <a href="/view_fiches">Fiches de Poste</a>
+        <a href="/kpi">KPI</a>
+        <a href="/deposer_fiche">Déposer une fiche</a>
+    </div>
 
-    <!-- 🔥 Filtres 🔥 -->
+    <h1>📋 Gestion des Fiches de Poste</h1>
+
     <div class="filters">
-        <label for="etatFilter">📌 Filtrer par État :</label>
         <select id="etatFilter" multiple onchange="filterFiches()">
             <option value="Gagnée">Gagnée</option>
             <option value="En cours">En cours</option>
@@ -116,34 +113,29 @@
             <option value="Fermée">Fermée</option>
         </select>
 
-        <label for="dateFilter">📅 Filtrer par Date :</label>
         <input type="date" id="dateFilter" onchange="filterFiches()">
+
+        <button onclick="updateFiches()">🔄 Mettre à jour</button>
+        <button onclick="sortFiches()">📊 Trier par État</button>
+        <button onclick="downloadExcel()">📥 Excel</button>
     </div>
 
-    <!-- 📊 Tableau des fiches de poste -->
     <table>
         <thead>
             <tr>
                 <th>Titre</th>
                 <th>Référence</th>
-                <th>Date de création</th>
-                <th>Date de clôture</th>
+                <th>Date création</th>
+                <th>Date clôture</th>
                 <th>État</th>
-                <th>Nombre de positionnements</th>
+                <th>Positionnements</th>
                 <th>Client</th>
                 <th>Opérationnel Client</th>
             </tr>
         </thead>
         <tbody>
             {% for fiche in fiches %}
-            <tr 
-                class="{% if fiche.État == 'Gagnée' %} etat-gagnee
-                       {% elif fiche.État == 'En cours' %} etat-en-cours
-                       {% elif fiche.État == 'Piste identifiée' %} etat-piste-identifiee
-                       {% elif fiche.État == 'Fermée' %} etat-fermee
-                       {% endif %}"
-                data-etat="{{ fiche.État }}"
-                data-date="{{ fiche['Date de création'] }}">
+            <tr class="etat-{{ fiche.État|lower|replace(' ', '-') }}" data-etat="{{ fiche.État }}" data-date="{{ fiche['Date de création'] }}">
                 <td>{{ fiche.Titre }}</td>
                 <td>{{ fiche.Référence }}</td>
                 <td>{{ fiche["Date de création"] }}</td>
@@ -156,5 +148,6 @@
             {% endfor %}
         </tbody>
     </table>
+
 </body>
 </html>
