@@ -1,47 +1,94 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f7ff;
+    color: #333;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
 }
 
-nav {
-    background-color: #333;
-    color: white;
-    padding: 10px;
-    text-align: center;
+.navbar {
+    background-color: #1e2148;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-nav ul {
-    list-style: none;
-    padding: 0;
+.navbar img {
+    height: 40px;
+    width: auto;
+    border-radius: 5px;
 }
 
-nav ul li {
-    display: inline;
-    margin-right: 20px;
-}
-
-nav ul li a {
+.navbar a {
     color: white;
     text-decoration: none;
+    padding: 10px;
+    font-size: 16px;
+    transition: color 0.3s ease;
 }
 
-.container {
-    max-width: 900px;
-    margin: auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.navbar a:hover {
+    color: #6a54d1;
+}
+
+/* 🔹 Styles communs à toutes les pages (arrière-plan, police, titres, etc.) */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f7ff;
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
 h1 {
     text-align: center;
+    color: #1e2148;
+    margin-top: 20px;
 }
 
-.chart-container {
-    margin: 20px auto;
-    width: 100%;
-    max-width: 800px;
+button {
+    background-color: #6a54d1;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 10px;
 }
+
+button:hover {
+    background-color: #5942b3;
+}
+
+/* 🔹 Tableau et ses cellules */
+table {
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background-color: #1e2148;
+    color: white;
+}
+
+tr:hover {
+    background-color: #f1f3ff;
+}
+
+/* 🔹 Couleurs selon l'état */
+.etat-gagnee { background-color: rgba(40, 167, 69, 0.3); }
+.etat-en-cours { background-color: rgba(0, 123, 255, 0.3); }
+.etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.3); }
+.etat-fermee { background-color: rgba(255, 0, 0, 0.3); }
