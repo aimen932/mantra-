@@ -1,6 +1,6 @@
 Flask
 flask_cors
-jwt
+PyJWT==2.8.0
 pandas
 requests
 openpyxl

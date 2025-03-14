@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, send_file, render_template, request
 import time
-import jwt
+import jwt as pyjwt
 import requests
 import pandas as pd
 import os
@@ -17,12 +17,15 @@ CLIENT_TOKEN = "6d616e747261"
 CLIENT_KEY = "06daebfc3aae9ef09791"
 
 # 🔑 Génération du token JWT
-jwt_token = jwt.encode({
+jwt_token = pyjwt.encode({
     "userToken": USER_TOKEN,
     "clientToken": CLIENT_TOKEN,
     "time": int(time.time()),
     "mode": "normal"
 }, CLIENT_KEY, algorithm="HS256")
+
+if isinstance(jwt_token, bytes):
+    jwt_token = jwt_token.decode("utf-8")
 
 # 📌 Headers pour l'API BoondManager
 HEADERS = {
