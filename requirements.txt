@@ -1,0 +1,6 @@
+Flask
+flask_cors
+jwt
+pandas
+requests
+openpyxl

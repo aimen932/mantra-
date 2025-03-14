@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI - Fiches de Poste</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='kpi_charts.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Accueil</a></li>
+            <li><a href="/view_fiches">Visualisation Fiches</a></li>
+            <li><a href="/kpi" class="active">KPI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Tableau de Bord - KPI</h1>
+
+        <div class="chart-container">
+            <canvas id="etatChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="evolutionChart"></canvas>
+        </div>
+    </div>
+
+</body>
+</html>
