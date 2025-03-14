@@ -132,12 +132,23 @@ def view_fiches():
 
 @app.route("/update_fiches", methods=["GET"])
 def update_fiches():
+    """Met à jour les fiches de poste en récupérant les nouvelles données depuis l'API BoondManager."""
     try:
-        response = requests.get("http://127.0.0.1:5000/get_fiches")
-        if response.status_code != 200:
-            return jsonify({"success": False}), 500
+        # Appel direct à la fonction Flask interne (sans passer par requests)
+        response = get_fiches()
+        fiches_data = response.get_json()
 
-        pd.DataFrame(response.json()).to_excel("fiches_de_poste.xlsx", index=False, engine="openpyxl")
+        # Vérification si on obtient une erreur dans la réponse
+        if isinstance(fiches_data, dict) and fiches_data.get("error"):
+            return jsonify({"success": False, "error": fiches_data["error"]}), 500
+        
+        # Création du DataFrame avec les données récupérées
+        df = pd.DataFrame(fiches_data)
+
+        # Sauvegarde en Excel
+        file_path = "fiches_de_poste.xlsx"
+        df.to_excel(file_path, index=False, engine="openpyxl")
+
         return jsonify({"success": True})
 
     except Exception as e:
