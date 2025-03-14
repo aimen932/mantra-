@@ -48,55 +48,81 @@ def get_fiches():
     date_debut = request.args.get("date_debut", "").strip()
     date_fin = request.args.get("date_fin", "").strip()
 
-    fiche_de_poste_list, page, limit = [], 1, 100
-    contacts_mapping, companies_mapping = {}, {}
+    page = 1
+    limit = 100
+    all_fiches = []
+    contacts_mapping = {}
+    companies_mapping = {}
 
     while True:
-        params = {"page": page, "limit": limit, "filters[state]": "0,1,2,5"}
-        response = requests.get(API_URL, headers=HEADERS, params=params)
+        response = requests.get(API_URL, headers=HEADERS, params={"page": page, "limit": limit, "filters[state]": "0,1,2,5"})
         if response.status_code != 200:
-            break
+            return jsonify({"error": "Erreur API", "status": response.status_code}), response.status_code
 
         data = response.json()
-        fiches, included = data.get("data", []), data.get("included", [])
+        fiches = data.get("data", [])
+        total_rows = data.get("meta", {}).get("totals", {}).get("rows", 0)
 
+        included = data.get("included", [])
         for item in included:
-            if item["type"] == "contact":
-                contacts_mapping[item["id"]] = item["attributes"].get("firstName", "") + " " + item["attributes"].get("lastName", "")
-            elif item["type"] == "company":
-                companies_mapping[item["id"]] = item["attributes"].get("name", "")
+            if item.get("type") == "contact":
+                contacts_mapping[item.get("id")] = item.get("attributes", {}).get("firstName", "Inconnu") + " " + item.get("attributes", {}).get("lastName", "Inconnu")
+            if item.get("type") == "company":
+                companies_mapping[item.get("id")] = item.get("attributes", {}).get("name", "Non attribué")
 
-        for fiche in fiches:
-            attributes, relationships = fiche["attributes"], fiche.get("relationships", {})
+        all_fiches.extend(fiches)
 
-            state_label = ETAT_FICHE_DE_POSTE.get(attributes.get("state"), "État inconnu")
-            creation_date = format_date(attributes.get("creationDate"))
-            closure_date = format_date(attributes.get("closingDate"))  # ✅ Date de clôture
-
-            if request.args.getlist("etat") and state_label not in request.args.getlist("etat"):
-                continue
-
-            if date_debut and date_fin and creation_date != "Non renseigné":
-                date_obj = datetime.strptime(creation_date, "%d/%m/%Y")
-                if not (datetime.strptime(date_debut, "%d/%m/%Y") <= date_obj <= datetime.strptime(date_fin, "%d/%m/%Y")):
-                    continue
-
-            fiche_de_poste_list.append({
-                "Titre": attributes.get("title", "Non renseigné"),
-                "Référence": attributes.get("reference", "Non renseigné"),
-                "Date de création": creation_date,
-                "Date de clôture": closure_date,
-                "État": state_label,
-                "Nombre de positionnements": attributes.get("numberOfActivePositionings", 0),
-                "Client": companies_mapping.get(relationships.get("company", {}).get("data", {}).get("id"), "Non attribué"),
-                "Opérationnel Client": contacts_mapping.get(relationships.get("contact", {}).get("data", {}).get("id"), "Non attribué")
-            })
-
-        if len(fiche_de_poste_list) >= data["meta"]["totals"]["rows"]:
+        if len(all_fiches) >= total_rows:
             break
         page += 1
 
+    fiche_de_poste_list = []
+
+    for item in all_fiches:
+        attributes = item.get("attributes", {})
+        relationships = item.get("relationships", {})
+
+        company_data = relationships.get("company", {}).get("data")
+        company_id = company_data.get("id") if isinstance(company_data, dict) else None
+        client_company_name = companies_mapping.get(company_id, "Non attribué")
+
+        contact_data = relationships.get("contact", {}).get("data", {})
+        contact_id = contact_data.get("id") if isinstance(contact_data, dict) else None
+        client_contact_name = contacts_mapping.get(contact_id, "Non attribué")
+
+        state_code = attributes.get("state", -1)
+        state_label = ETAT_FICHE_DE_POSTE.get(state_code, f"État inconnu ({state_code})")
+        nombre_positionnements = attributes.get("numberOfActivePositionings", 0)
+
+        date_cloture = attributes.get("closingDate", "Non renseigné")
+        formatted_cloture_date = format_date(date_cloture)
+
+        fiche_date = attributes.get("creationDate", "Non renseigné")
+        formatted_date = format_date(fiche_date)
+
+        if filtres_etats and state_label not in filtres_etats:
+            continue
+
+        if date_debut and date_fin and formatted_date != "Non renseigné":
+            date_obj = datetime.strptime(formatted_date, "%d/%m/%Y")
+            date_debut_obj = datetime.strptime(date_debut, "%d/%m/%Y")
+            date_fin_obj = datetime.strptime(date_fin, "%d/%m/%Y")
+            if not (date_debut_obj <= date_obj <= date_fin_obj):
+                continue
+
+        fiche_de_poste_list.append({
+            "Titre": attributes.get("title", "Non renseigné"),
+            "Référence": attributes.get("reference", "Non renseigné"),
+            "Date de création": formatted_date,
+            "Date de clôture": formatted_cloture_date,
+            "État": state_label,
+            "Nombre de positionnements": nombre_positionnements,
+            "Client": client_company_name,
+            "Opérationnel Client": client_contact_name
+        })
+
     return jsonify(fiche_de_poste_list)
+
 
 @app.route("/view_fiches", methods=["GET"])
 def view_fiches():
