@@ -3,7 +3,6 @@ import time
 import jwt as pyjwt
 import requests
 import pandas as pd
-import openpyxl
 from datetime import datetime
 from flask_cors import CORS
 
@@ -22,7 +21,7 @@ ETAT_FICHE_DE_POSTE = {0: "Piste identifiée", 5: "En cours", 1: "Gagnée", 2: "
 def format_date(date_str):
     if date_str and date_str != "Non renseigné":
         try:
-            return time.strftime("%d/%m/%Y", time.strptime(date_str, "%Y-%m-%dT%H:%M:%S%z"))
+            return datetime.strptime(date_str, "%Y-%m-%d").strftime("%d/%m/%Y")
         except Exception:
             return "Non renseigné"
     return "Non renseigné"
@@ -94,8 +93,9 @@ def get_fiches():
         state_label = ETAT_FICHE_DE_POSTE.get(state_code, f"État inconnu ({state_code})")
         nombre_positionnements = attributes.get("numberOfActivePositionings", 0)
 
-        date_cloture = attributes.get("closingDate", "Non renseigné")
-        formatted_cloture_date = format_date(date_cloture)
+        # ✅ Utilisation correcte de 'answerDate'
+        date_cloture_raw = attributes.get("closingDate")
+        formatted_cloture_date = format_date(date_cloture_raw)
 
         fiche_date = attributes.get("creationDate", "Non renseigné")
         formatted_date = format_date(fiche_date)
@@ -123,7 +123,6 @@ def get_fiches():
 
     return jsonify(fiche_de_poste_list)
 
-
 @app.route("/view_fiches", methods=["GET"])
 def view_fiches():
     response = get_fiches()
@@ -132,20 +131,14 @@ def view_fiches():
 
 @app.route("/update_fiches", methods=["GET"])
 def update_fiches():
-    """Met à jour les fiches de poste en récupérant les nouvelles données depuis l'API BoondManager."""
     try:
-        # Appel direct à la fonction Flask interne (sans passer par requests)
         response = get_fiches()
         fiches_data = response.get_json()
 
-        # Vérification si on obtient une erreur dans la réponse
         if isinstance(fiches_data, dict) and fiches_data.get("error"):
             return jsonify({"success": False, "error": fiches_data["error"]}), 500
         
-        # Création du DataFrame avec les données récupérées
         df = pd.DataFrame(fiches_data)
-
-        # Sauvegarde en Excel
         file_path = "fiches_de_poste.xlsx"
         df.to_excel(file_path, index=False, engine="openpyxl")
 
@@ -157,6 +150,9 @@ def update_fiches():
 @app.route("/")
 def home():
     return render_template("index.html")
+
+# if __name__ == "__main__":
+#     app.run(debug=True)
 
 if __name__ == "__main__":
     import os
