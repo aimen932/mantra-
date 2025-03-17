@@ -85,27 +85,62 @@
         tr:hover {
             background-color: #f1f3ff;
         }
-        .etat-gagnee { background-color: rgba(40, 167, 69, 0.3); }
+        /* Couleurs selon état */
+        .etat-gagnée { background-color: rgba(40, 167, 69, 0.3); }
         .etat-en-cours { background-color: rgba(0, 123, 255, 0.3); }
-        .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.3); }
-        .etat-fermee { background-color: rgba(255, 0, 0, 0.3); }
+        .etat-piste-identifiée { background-color: rgba(255, 165, 0, 0.3); }
+        .etat-fermée { background-color: rgba(255, 0, 0, 0.3); }
+
+        /* Style Popup Loading */
+        .loading-popup {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 18px;
+            z-index: 9999;
+        }
+
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #6a54d1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 
     <script>
         function updateFiches() {
+            const loadingPopup = document.getElementById('loadingPopup');
+            loadingPopup.style.display = 'flex'; // Afficher la popup immédiatement
+        
             fetch('/update_fiches')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        alert('✅ Fiches mises à jour avec succès !');
-                        location.reload();
-                    } else {
-                        alert('❌ Erreur: ' + data.error);
-                    }
+                    location.reload(); // Recharger la page immédiatement après la réponse
                 })
-                .catch(error => alert('Erreur de connexion : ' + error));
+                .catch(error => {
+                    loadingPopup.style.display = 'none';
+                    alert('Erreur de connexion : ' + error);
+                });
         }
-
+        
+        
         function filterFiches() {
             let checkboxes = document.querySelectorAll(".etat-checkbox");
             let selectedEtats = Array.from(checkboxes)
@@ -120,7 +155,12 @@
             });
         }
 
-        let isSortedByEtat = false;  // initialement désactivé
+        let isSortedByEtat = false;
+        let originalRows = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            originalRows = Array.from(document.querySelectorAll("tbody tr"));
+        });
 
         function toggleSort() {
             if (!isSortedByEtat) {
@@ -131,12 +171,6 @@
                 isSortedByEtat = false;
             }
         }
-
-        let originalRows = [];  // sauvegarder l'ordre original une seule fois
-
-        document.addEventListener("DOMContentLoaded", () => {
-            originalRows = Array.from(document.querySelectorAll("tbody tr"));
-        });
 
         function sortFichesParEtat() {
             let tbody = document.querySelector("tbody");
@@ -155,10 +189,13 @@
             originalRows.forEach(row => tbody.appendChild(row));
         }
 
-
         function downloadExcel() {
             window.location.href = "/download_excel";
         }
+
+        window.addEventListener('load', function() {
+            document.getElementById('loadingPopup').style.display = 'none';
+        });
     </script>
 </head>
 
@@ -178,45 +215,22 @@
         <label><input type="checkbox" class="etat-checkbox" value="En cours" onchange="filterFiches()"> En cours</label>
         <label><input type="checkbox" class="etat-checkbox" value="Piste identifiée" onchange="filterFiches()"> Piste identifiée</label>
         <label><input type="checkbox" class="etat-checkbox" value="Fermée" onchange="filterFiches()"> Fermée</label>
-
         <button onclick="updateFiches()">🔄 Mettre à jour</button>
-        <button id="sortBtn" onclick="toggleSort()">📊 Trier par État</button>
+        <button onclick="toggleSort()">📊 Trier par État</button>
         <button onclick="downloadExcel()">📥 Excel</button>
     </div>
 
     <table>
-        <thead>
-            <tr>
-                <th>Titre</th>
-                <th>Référence</th>
-                <th>Date création</th>
-                <th>Date clôture</th>
-                <th>État</th>
-                <th>Positionnements</th>
-                <th>Client</th>
-                <th>Opérationnel Client</th>
-            </tr>
-        </thead>
+        <thead><tr><th>Titre</th><th>Référence</th><th>Date création</th><th>Date clôture</th><th>État</th><th>Positionnements</th><th>Client</th><th>Opérationnel Client</th></tr></thead>
         <tbody>
             {% for fiche in fiches %}
-            <tr
-                class="{% if fiche.État == 'Gagnée' %}etat-gagnee{% elif fiche.État == 'En cours' %}etat-en-cours{% elif fiche.État == 'Piste identifiée' %}etat-piste-identifiee{% elif fiche.État == 'Fermée' %}etat-fermee{% endif %}"
-                data-etat="{{ fiche.État }}"
-                data-date-originale="{{ fiche['Date de création'] }}"
-            >
-                <td>{{ fiche.Titre }}</td>
-                <td>{{ fiche.Référence }}</td>
-                <td>{{ fiche["Date de création"] }}</td>
-                <td>{{ fiche["Date de clôture"] }}</td>
-                <td>{{ fiche.État }}</td>
-                <td>{{ fiche["Nombre de positionnements"] }}</td>
-                <td>{{ fiche.Client }}</td>
-                <td>{{ fiche["Opérationnel Client"] }}</td>
+            <tr class="etat-{{ fiche.État | lower | replace(' ', '-') }}" data-etat="{{ fiche.État }}">
+                <td>{{ fiche.Titre }}</td><td>{{ fiche.Référence }}</td><td>{{ fiche["Date de création"] }}</td><td>{{ fiche["Date de clôture"] }}</td><td>{{ fiche.État }}</td><td>{{ fiche["Nombre de positionnements"] }}</td><td>{{ fiche.Client }}</td><td>{{ fiche["Opérationnel Client"] }}</td>
             </tr>
-
             {% endfor %}
         </tbody>
     </table>
 
+    <div id="loadingPopup" class="loading-popup"><div class="loader"></div><p>Chargement en cours...</p></div>
 </body>
 </html>
