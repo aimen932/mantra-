@@ -18,10 +18,18 @@ API_URL = "https://ui.boondmanager.com/api/opportunities"
 
 ETAT_FICHE_DE_POSTE = {0: "Piste identifiée", 5: "En cours", 1: "Gagnée", 2: "Fermée"}
 
-def format_date(date_str):
+def format_date_closing(date_str):
     if date_str and date_str != "Non renseigné":
         try:
             return datetime.strptime(date_str, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except Exception:
+            return "Non renseigné"
+    return "Non renseigné"
+
+def format_date_created(date_str):
+    if date_str and date_str != "Non renseigné":
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S%z").strftime("%d/%m/%Y")
         except Exception:
             return "Non renseigné"
     return "Non renseigné"
@@ -95,10 +103,10 @@ def get_fiches():
 
         # ✅ Utilisation correcte de 'answerDate'
         date_cloture_raw = attributes.get("closingDate")
-        formatted_cloture_date = format_date(date_cloture_raw)
+        formatted_cloture_date = format_date_closing(date_cloture_raw)
 
-        fiche_date = attributes.get("creationDate", "Non renseigné")
-        formatted_date = format_date(fiche_date)
+        fiche_date = attributes.get("creationDate")
+        formatted_date = format_date_created(fiche_date)
 
         if filtres_etats and state_label not in filtres_etats:
             continue
@@ -151,9 +159,9 @@ def update_fiches():
 def home():
     return render_template("index.html")
 
-# if __name__ == "__main__":
-#     app.run(debug=True)
-
 if __name__ == "__main__":
-    import os
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
+    app.run(debug=True)
+
+# if __name__ == "__main__":
+#     import os
+#     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)

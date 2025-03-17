@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fiches de Poste - Mantra</title>
@@ -45,17 +44,14 @@
         .filters {
             text-align: center;
             margin: 20px auto;
-            padding: 10px;
+            padding: 15px;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             display: inline-block;
         }
-        .filters select, .filters input {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            margin: 0 10px;
+        .filters input {
+            margin: 0 8px;
         }
         button {
             background-color: #6a54d1;
@@ -94,9 +90,79 @@
         .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.3); }
         .etat-fermee { background-color: rgba(255, 0, 0, 0.3); }
     </style>
-</head>
-<body>
 
+    <script>
+        function updateFiches() {
+            fetch('/update_fiches')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ Fiches mises à jour avec succès !');
+                        location.reload();
+                    } else {
+                        alert('❌ Erreur: ' + data.error);
+                    }
+                })
+                .catch(error => alert('Erreur de connexion : ' + error));
+        }
+
+        function filterFiches() {
+            let checkboxes = document.querySelectorAll(".etat-checkbox");
+            let selectedEtats = Array.from(checkboxes)
+                                     .filter(cb => cb.checked)
+                                     .map(cb => cb.value);
+
+            let rows = document.querySelectorAll("tbody tr");
+
+            rows.forEach(row => {
+                let rowEtat = row.getAttribute("data-etat");
+                row.style.display = selectedEtats.length === 0 || selectedEtats.includes(rowEtat) ? "" : "none";
+            });
+        }
+
+        let isSortedByEtat = false;  // initialement désactivé
+
+        function toggleSort() {
+            if (!isSortedByEtat) {
+                sortFichesParEtat();
+                isSortedByEtat = true;
+            } else {
+                resetOrderChronologique();
+                isSortedByEtat = false;
+            }
+        }
+
+        let originalRows = [];  // sauvegarder l'ordre original une seule fois
+
+        document.addEventListener("DOMContentLoaded", () => {
+            originalRows = Array.from(document.querySelectorAll("tbody tr"));
+        });
+
+        function sortFichesParEtat() {
+            let tbody = document.querySelector("tbody");
+            let rows = Array.from(tbody.rows);
+
+            rows.sort((a, b) => {
+                const ordre = {"En cours": 1, "Piste identifiée": 2, "Gagnée": 3, "Fermée": 4};
+                return ordre[a.getAttribute("data-etat")] - ordre[b.getAttribute("data-etat")];
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function resetOrderChronologique() {
+            let tbody = document.querySelector("tbody");
+            originalRows.forEach(row => tbody.appendChild(row));
+        }
+
+
+        function downloadExcel() {
+            window.location.href = "/download_excel";
+        }
+    </script>
+</head>
+
+<body>
     <div class="navbar">
         <img src="/static/mantra_talents_logo.jpeg" alt="Mantra Logo">
         <a href="/">Accueil</a>
@@ -108,17 +174,13 @@
     <h1>📋 Gestion des Fiches de Poste</h1>
 
     <div class="filters">
-        <select id="etatFilter" multiple onchange="filterFiches()">
-            <option value="Gagnée">Gagnée</option>
-            <option value="En cours">En cours</option>
-            <option value="Piste identifiée">Piste identifiée</option>
-            <option value="Fermée">Fermée</option>
-        </select>
-
-        <input type="date" id="dateFilter" onchange="filterFiches()">
+        <label><input type="checkbox" class="etat-checkbox" value="Gagnée" onchange="filterFiches()"> Gagnée</label>
+        <label><input type="checkbox" class="etat-checkbox" value="En cours" onchange="filterFiches()"> En cours</label>
+        <label><input type="checkbox" class="etat-checkbox" value="Piste identifiée" onchange="filterFiches()"> Piste identifiée</label>
+        <label><input type="checkbox" class="etat-checkbox" value="Fermée" onchange="filterFiches()"> Fermée</label>
 
         <button onclick="updateFiches()">🔄 Mettre à jour</button>
-        <button onclick="sortFiches()">📊 Trier par État</button>
+        <button id="sortBtn" onclick="toggleSort()">📊 Trier par État</button>
         <button onclick="downloadExcel()">📥 Excel</button>
     </div>
 
@@ -137,7 +199,11 @@
         </thead>
         <tbody>
             {% for fiche in fiches %}
-            <tr class="{% if fiche.État == 'Gagnée' %}etat-gagnee{% elif fiche.État == 'En cours' %}etat-en-cours{% elif fiche.État == 'Piste identifiée' %}etat-piste-identifiee{% elif fiche.État == 'Fermée' %}etat-fermee{% endif %}">
+            <tr
+                class="{% if fiche.État == 'Gagnée' %}etat-gagnee{% elif fiche.État == 'En cours' %}etat-en-cours{% elif fiche.État == 'Piste identifiée' %}etat-piste-identifiee{% elif fiche.État == 'Fermée' %}etat-fermee{% endif %}"
+                data-etat="{{ fiche.État }}"
+                data-date-originale="{{ fiche['Date de création'] }}"
+            >
                 <td>{{ fiche.Titre }}</td>
                 <td>{{ fiche.Référence }}</td>
                 <td>{{ fiche["Date de création"] }}</td>
@@ -147,6 +213,7 @@
                 <td>{{ fiche.Client }}</td>
                 <td>{{ fiche["Opérationnel Client"] }}</td>
             </tr>
+
             {% endfor %}
         </tbody>
     </table>
