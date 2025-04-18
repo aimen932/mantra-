@@ -236,10 +236,9 @@ def kpi_annuel():
         fiches_gagnees_par_annee=fiches_gagnees_par_annee
     )
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5001)
-
-
 # if __name__ == "__main__":
-#     import os
-#     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
+#     app.run(debug=True, port=5001)
+
+if __name__ == "__main__":
+    import os
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
