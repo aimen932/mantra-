@@ -159,9 +159,87 @@ def update_fiches():
 def home():
     return render_template("index.html")
 
-# if __name__ == "__main__":
-#     app.run(debug=True)
+@app.route("/kpi")
+def kpi():
+    response = get_fiches()
+    fiches = response.get_json()
+
+    # Détermination dynamique des 3 dernières années
+    current_year = datetime.now().year
+    years = [current_year - i for i in range(2, -1, -1)]  # ex: [2025, 2024, 2023]
+    mois_labels = [
+        "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
+        "Juil", "Août", "Sep", "Oct", "Nov", "Déc"
+    ]
+
+    # Initialisation des compteurs pour chaque année
+    fiches_par_annee = {year: [0]*12 for year in years}
+    fiches_gagnees_par_annee = {year: [0]*12 for year in years}
+
+    for fiche in fiches:
+        date_creation = fiche.get("Date de création")
+        etat = fiche.get("État")
+        if date_creation and date_creation != "Non renseigné":
+            try:
+                date_obj = datetime.strptime(date_creation, "%d/%m/%Y")
+                if date_obj.year in years:
+                    mois = date_obj.month - 1
+                    fiches_par_annee[date_obj.year][mois] += 1
+                    if etat == "Gagnée":
+                        fiches_gagnees_par_annee[date_obj.year][mois] += 1
+            except Exception:
+                continue
+
+    return render_template(
+        "kpi.html",
+        mois_labels=mois_labels,
+        years=years,
+        fiches_par_annee=fiches_par_annee,
+        fiches_gagnees_par_annee=fiches_gagnees_par_annee
+    )
+
+@app.route("/kpi/annuel")
+def kpi_annuel():
+    response = get_fiches()
+    fiches = response.get_json()
+
+    # Détermination dynamique des 3 dernières années
+    current_year = datetime.now().year
+    years = [current_year - i for i in range(2, -1, -1)]
+    mois_labels = [
+        "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
+        "Juil", "Août", "Sep", "Oct", "Nov", "Déc"
+    ]
+
+    fiches_par_annee = {year: [0]*12 for year in years}
+    fiches_gagnees_par_annee = {year: [0]*12 for year in years}
+
+    for fiche in fiches:
+        date_creation = fiche.get("Date de création")
+        etat = fiche.get("État")
+        if date_creation and date_creation != "Non renseigné":
+            try:
+                date_obj = datetime.strptime(date_creation, "%d/%m/%Y")
+                if date_obj.year in years:
+                    mois = date_obj.month - 1
+                    fiches_par_annee[date_obj.year][mois] += 1
+                    if etat == "Gagnée":
+                        fiches_gagnees_par_annee[date_obj.year][mois] += 1
+            except Exception:
+                continue
+
+    return render_template(
+        "kpi_annuel.html",
+        mois_labels=mois_labels,
+        years=years,
+        fiches_par_annee=fiches_par_annee,
+        fiches_gagnees_par_annee=fiches_gagnees_par_annee
+    )
 
 if __name__ == "__main__":
-    import os
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
+    app.run(debug=True, port=5001)
+
+
+# if __name__ == "__main__":
+#     import os
+#     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)

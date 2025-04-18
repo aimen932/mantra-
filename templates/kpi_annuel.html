@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Annuel - Mantra</title>
+    <link rel="icon" href="/static/mantra_talents_logo.jpeg" type="image/jpeg">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@4.1.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #1e2148;
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .navbar img {
+            height: 50px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px;
+            transition: color 0.3s;
+        }
+        .navbar a:hover, .navbar a.active {
+            color: #6a54d1;
+        }
+        .container {
+            margin: 50px auto;
+            width: 80%;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn {
+            background-color: #6a54d1;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #5942b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <img src="/static/mantra_talents_logo.jpeg" alt="Mantra Logo">
+        <a href="/">Accueil</a>
+        <a href="/view_fiches">Fiches de Poste</a>
+        <a href="/kpi" class="active">Voir les KPI</a>
+        <a href="/deposer_fiche">Déposer une fiche</a>
+    </div>
+    <div class="container">
+        <h1 style="margin-top:50px;">KPI {{ years|join(', ') }} - Fiches de poste reçues et gagnées</h1>
+        <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display:inline-block;width:18px;height:18px;background:rgba(106,84,209,0.7);border-radius:3px;"></span>
+                <span style="font-weight:500;">Fiches reçues</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display:inline-block;width:18px;height:18px;background:rgba(46,204,113,0.7);border-radius:3px;"></span>
+                <span style="font-weight:500;">Fiches gagnées</span>
+            </div>
+        </div>
+        <div id="charts-row" style="display: flex; flex-wrap: wrap; gap: 24px; justify-content: center;"></div>
+        <a href="/kpi" class="btn">Retour au dashboard KPI</a>
+    </div>
+    <script>
+        const moisLabels = {{ mois_labels|tojson }};
+        const years = {{ years|tojson }};
+        const fichesParAnnee = {{ fiches_par_annee|tojson }};
+        const fichesGagneesParAnnee = {{ fiches_gagnees_par_annee|tojson }};
+
+        const couleursRecues = 'rgba(106, 84, 209, 0.7)';
+        const couleursGagnees = 'rgba(46, 204, 113, 0.7)';
+
+        const chartsRow = document.getElementById('charts-row');
+
+        function getMaxY() {
+            let max = 0;
+            for (let moisIdx = 0; moisIdx < moisLabels.length; moisIdx++) {
+                years.forEach(year => {
+                    max = Math.max(max, fichesParAnnee[year][moisIdx], fichesGagneesParAnnee[year][moisIdx]);
+                });
+            }
+            return Math.ceil(max * 1.1); // un peu de marge
+        }
+
+        const maxY = getMaxY();
+
+        moisLabels.forEach((mois, moisIdx) => {
+            // Crée un canvas pour chaque mois
+            const div = document.createElement('div');
+            div.style.width = '220px';
+            div.style.background = '#f9f9ff';
+            div.style.borderRadius = '10px';
+            div.style.boxShadow = '0 2px 8px rgba(106,84,209,0.08)';
+            div.style.padding = '10px 10px 20px 10px';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.alignItems = 'center';
+
+            const title = document.createElement('div');
+            title.textContent = mois;
+            title.style.fontWeight = 'bold';
+            title.style.marginBottom = '8px';
+            div.appendChild(title);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 180;
+            div.appendChild(canvas);
+
+            chartsRow.appendChild(div);
+
+            // Prépare les données pour ce mois
+            const dataRecues = years.map(year => fichesParAnnee[year][moisIdx]);
+            const dataGagnees = years.map(year => fichesGagneesParAnnee[year][moisIdx]);
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: years.map(String),
+                    datasets: [
+                        {
+                            label: 'Fiches reçues',
+                            data: dataRecues,
+                            backgroundColor: couleursRecues
+                        },
+                        {
+                            label: 'Fiches gagnées',
+                            data: dataGagnees,
+                            backgroundColor: couleursGagnees
+                        }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: { stacked: true },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            max: maxY,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

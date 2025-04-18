@@ -1,34 +1,137 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPI - Fiches de Poste</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='kpi_charts.js') }}"></script>
+    <title>KPI - Mantra</title>
+    <link rel="icon" href="/static/mantra_talents_logo.jpeg" type="image/jpeg">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #1e2148;
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .navbar img {
+            height: 50px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px;
+            transition: color 0.3s;
+        }
+        .navbar a:hover, .navbar a.active {
+            color: #6a54d1;
+        }
+        .container {
+            margin: 50px auto;
+            width: 80%;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn {
+            background-color: #6a54d1;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #5942b3;
+        }
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            width: 240px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 8px 24px rgba(106,84,209,0.15);
+            background: #f4f7ff;
+        }
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 18px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e2148;
+            margin-bottom: 10px;
+        }
+        .card-desc {
+            font-size: 15px;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="/">Accueil</a></li>
-            <li><a href="/view_fiches">Visualisation Fiches</a></li>
-            <li><a href="/kpi" class="active">KPI</a></li>
-        </ul>
-    </nav>
-
-    <div class="container">
-        <h1>Tableau de Bord - KPI</h1>
-
-        <div class="chart-container">
-            <canvas id="etatChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <canvas id="evolutionChart"></canvas>
-        </div>
+    <div class="navbar">
+        <img src="/static/mantra_talents_logo.jpeg" alt="Mantra Logo">
+        <a href="/">Accueil</a>
+        <a href="/view_fiches">Fiches de Poste</a>
+        <a href="/kpi" class="active">Voir les KPI</a>
+        <a href="/deposer_fiche">Déposer une fiche</a>
     </div>
 
+    <div class="container">
+        <h1>Tableau de bord KPI</h1>
+        <p>Choisissez un indicateur à visualiser :</p>
+        <div class="dashboard">
+            <div class="card" onclick="window.location.href='/kpi/annuel'">
+                <div class="card-icon">📊</div>
+                <div class="card-title">KPI Annuel</div>
+                <div class="card-desc">Visualisez les KPI annuels (3 dernières années).</div>
+            </div>
+            <div class="card" onclick="window.location.href='/kpi/type'">
+                <div class="card-icon">📈</div>
+                <div class="card-title">KPI par Type</div>
+                <div class="card-desc">Analysez les KPI selon le type de fiche.</div>
+            </div>
+            <div class="card" onclick="window.location.href='/kpi/secteur'">
+                <div class="card-icon">🏢</div>
+                <div class="card-title">KPI par Secteur</div>
+                <div class="card-desc">Analysez les KPI par secteur d'activité.</div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
