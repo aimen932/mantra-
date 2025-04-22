@@ -86,10 +86,11 @@
             background-color: #f1f3ff;
         }
         /* Couleurs selon état */
-        .etat-gagnée { background-color: rgba(40, 167, 69, 0.3); }
+        .etat-gagnee { background-color: rgba(40, 167, 69, 0.3); }
         .etat-en-cours { background-color: rgba(0, 123, 255, 0.3); }
-        .etat-piste-identifiée { background-color: rgba(255, 165, 0, 0.3); }
-        .etat-fermée { background-color: rgba(255, 0, 0, 0.3); }
+        .etat-piste-identifiee { background-color: rgba(255, 165, 0, 0.3); }
+        .etat-fermee { background-color: rgba(255, 0, 0, 0.3); }
+        .etat-cv-envoye { background-color: rgba(89, 0, 255, 0.3); }
 
         /* Style Popup Loading */
         .loading-popup {
@@ -177,7 +178,7 @@
             let rows = Array.from(tbody.rows);
 
             rows.sort((a, b) => {
-                const ordre = {"En cours": 1, "Piste identifiée": 2, "Gagnée": 3, "Fermée": 4};
+                const ordre = {"En cours": 1, "Piste identifiée": 2, "Gagnée": 3, "Fermée": 4, "Cv envoyé": 5};
                 return ordre[a.getAttribute("data-etat")] - ordre[b.getAttribute("data-etat")];
             });
 
@@ -215,6 +216,7 @@
         <label><input type="checkbox" class="etat-checkbox" value="En cours" onchange="filterFiches()"> En cours</label>
         <label><input type="checkbox" class="etat-checkbox" value="Piste identifiée" onchange="filterFiches()"> Piste identifiée</label>
         <label><input type="checkbox" class="etat-checkbox" value="Fermée" onchange="filterFiches()"> Fermée</label>
+        <label><input type="checkbox" class="etat-checkbox" value="Cv envoyé" onchange="filterFiches()"> Cv envoyé</label>
         <button onclick="updateFiches()">🔄 Mettre à jour</button>
         <button onclick="toggleSort()">📊 Trier par État</button>
         <button onclick="downloadExcel()">📥 Excel</button>
@@ -224,7 +226,7 @@
         <thead><tr><th>Titre</th><th>Référence</th><th>Date création</th><th>Date clôture</th><th>État</th><th>Positionnements</th><th>Client</th><th>Opérationnel Client</th></tr></thead>
         <tbody>
             {% for fiche in fiches %}
-            <tr class="etat-{{ fiche.État | lower | replace(' ', '-') }}" data-etat="{{ fiche.État }}">
+            <tr class="etat-{{ fiche.État | lower | replace(' ', '-') | replace('é', 'e') | replace('è', 'e') | replace('ê', 'e') | replace('à', 'a') | replace('ç', 'c') }}" data-etat="{{ fiche.État }}">
                 <td>{{ fiche.Titre }}</td><td>{{ fiche.Référence }}</td><td>{{ fiche["Date de création"] }}</td><td>{{ fiche["Date de clôture"] }}</td><td>{{ fiche.État }}</td><td>{{ fiche["Nombre de positionnements"] }}</td><td>{{ fiche.Client }}</td><td>{{ fiche["Opérationnel Client"] }}</td>
             </tr>
             {% endfor %}
