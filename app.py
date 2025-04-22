@@ -8,7 +8,7 @@ from flask_cors import CORS
 import threading
 import os
 import pickle
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 app = Flask(__name__, template_folder="templates")
 CORS(app)
@@ -352,7 +352,13 @@ def background_cache_refresh():
 #     plt.savefig(output_path)
 #     plt.close()
 
+# if __name__ == "__main__":
+#     import threading
+#     threading.Thread(target=background_cache_refresh, daemon=True).start()
+#     app.run(debug=True, port=5001)
+
 if __name__ == "__main__":
-    import threading
-    threading.Thread(target=background_cache_refresh, daemon=True).start()
-    app.run(debug=True, port=5001)
+     import os
+     import threading
+     threading.Thread(target=background_cache_refresh, daemon=True).start()
+     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
