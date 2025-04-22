@@ -254,17 +254,17 @@ def kpi_annuel():
         fiches_gagnees_par_annee=fiches_gagnees_par_annee
     )
 
-@app.route("/kpi/evolution_consultants")
-def kpi_evolution_consultants():
-    fichiers = [
-        "Suivi Canal 2021.xlsx",
-        "Suivi Canal 2022.xlsx",
-        "Suivi Canal 2023.xlsx",
-        "Suivi Canal 2024.xlsx",
-        "Suivi Canal 2025.xlsx"
-    ]
-    plot_evolution_consultants(fichiers)
-    return render_template("kpi_evolution.html")
+# @app.route("/kpi/evolution_consultants")
+# def kpi_evolution_consultants():
+#     fichiers = [
+#         "Suivi Canal 2021.xlsx",
+#         "Suivi Canal 2022.xlsx",
+#         "Suivi Canal 2023.xlsx",
+#         "Suivi Canal 2024.xlsx",
+#         "Suivi Canal 2025.xlsx"
+#     ]
+#     plot_evolution_consultants(fichiers)
+#     return render_template("kpi_evolution.html")
 
 def background_cache_refresh():
     while True:
@@ -272,85 +272,85 @@ def background_cache_refresh():
             get_fiches_cached()
         time.sleep(CACHE_DURATION)
 
-def nettoyer_fichier_suivi_canal(fichier_path):
-    df = pd.read_excel(fichier_path, header=1)
-    df.columns = df.columns.str.replace('\n', ' ', regex=True).str.replace(' +', ' ', regex=True).str.strip()
-    df = df.loc[:, ~df.columns.duplicated()]
+# def nettoyer_fichier_suivi_canal(fichier_path):
+#     df = pd.read_excel(fichier_path, header=1)
+#     df.columns = df.columns.str.replace('\n', ' ', regex=True).str.replace(' +', ' ', regex=True).str.strip()
+#     df = df.loc[:, ~df.columns.duplicated()]
 
-    premiere_ligne = df.iloc[0].astype(str).str.cat(sep='').replace(' ', '')
-    if 'TJMFacturé' in premiere_ligne or 'TJMPayé' in premiere_ligne or 'TJMConsultantpayé' in premiere_ligne or 'TJMClientfacturé' in premiere_ligne:
-        df = df.iloc[1:].reset_index(drop=True)
+#     premiere_ligne = df.iloc[0].astype(str).str.cat(sep='').replace(' ', '')
+#     if 'TJMFacturé' in premiere_ligne or 'TJMPayé' in premiere_ligne or 'TJMConsultantpayé' in premiere_ligne or 'TJMClientfacturé' in premiere_ligne:
+#         df = df.iloc[1:].reset_index(drop=True)
 
-    colonnes_map = {
-        'tjm_payé': None,
-        'tjm_facturé': None,
-        'marge': None,
-        'pourcentage': None
-    }
+#     colonnes_map = {
+#         'tjm_payé': None,
+#         'tjm_facturé': None,
+#         'marge': None,
+#         'pourcentage': None
+#     }
 
-    for col in df.columns:
-        col_lower = col.lower()
-        if 'tjm' in col_lower and 'payé' in col_lower:
-            colonnes_map['tjm_payé'] = col
-        elif 'tjm' in col_lower and 'facturé' in col_lower:
-            colonnes_map['tjm_facturé'] = col
-        elif 'marge' in col_lower:
-            colonnes_map['marge'] = col
-        elif '%' in col or 'pourcent' in col_lower:
-            colonnes_map['pourcentage'] = col
+#     for col in df.columns:
+#         col_lower = col.lower()
+#         if 'tjm' in col_lower and 'payé' in col_lower:
+#             colonnes_map['tjm_payé'] = col
+#         elif 'tjm' in col_lower and 'facturé' in col_lower:
+#             colonnes_map['tjm_facturé'] = col
+#         elif 'marge' in col_lower:
+#             colonnes_map['marge'] = col
+#         elif '%' in col or 'pourcent' in col_lower:
+#             colonnes_map['pourcentage'] = col
 
-    for key, col in colonnes_map.items():
-        if col:
-            df[col] = df[col].replace({'€': '', ',': '.', '\s': ''}, regex=True)
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+#     for key, col in colonnes_map.items():
+#         if col:
+#             df[col] = df[col].replace({'€': '', ',': '.', '\s': ''}, regex=True)
+#             df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    colonnes_critiques = [col for col in colonnes_map.values() if col]
-    df = df.dropna(subset=colonnes_critiques)
+#     colonnes_critiques = [col for col in colonnes_map.values() if col]
+#     df = df.dropna(subset=colonnes_critiques)
 
-    return df
+#     return df
 
-def evolution_consultants(df, annee):
-    nom_consultant = next((col for col in df.columns if 'consultant' in col.lower()), None)
-    date_entree = next((col for col in df.columns if "entrée" in col.lower()), None)
-    date_fin = next((col for col in df.columns if "fin" in col.lower()), None)
+# def evolution_consultants(df, annee):
+#     nom_consultant = next((col for col in df.columns if 'consultant' in col.lower()), None)
+#     date_entree = next((col for col in df.columns if "entrée" in col.lower()), None)
+#     date_fin = next((col for col in df.columns if "fin" in col.lower()), None)
 
-    df[date_entree] = pd.to_datetime(df[date_entree], errors='coerce', dayfirst=True)
-    df[date_fin] = pd.to_datetime(df[date_fin], errors='coerce', dayfirst=True)
+#     df[date_entree] = pd.to_datetime(df[date_entree], errors='coerce', dayfirst=True)
+#     df[date_fin] = pd.to_datetime(df[date_fin], errors='coerce', dayfirst=True)
 
-    mois = pd.date_range(start=f"{annee}-01-01", end=f"{annee}-12-31", freq='MS')
-    evolution = []
+#     mois = pd.date_range(start=f"{annee}-01-01", end=f"{annee}-12-31", freq='MS')
+#     evolution = []
 
-    for m in mois:
-        present = df[
-            (
-                (df[date_entree].isna()) | (df[date_entree] <= m + pd.offsets.MonthEnd(1))
-            ) & (
-                (df[date_fin].isna()) | (df[date_fin] >= m)
-            )
-        ][nom_consultant].nunique()
-        evolution.append(present)
+#     for m in mois:
+#         present = df[
+#             (
+#                 (df[date_entree].isna()) | (df[date_entree] <= m + pd.offsets.MonthEnd(1))
+#             ) & (
+#                 (df[date_fin].isna()) | (df[date_fin] >= m)
+#             )
+#         ][nom_consultant].nunique()
+#         evolution.append(present)
 
-    return mois, evolution
+#     return mois, evolution
 
-def plot_evolution_consultants(fichiers, output_path="static/evolution_consultants.png"):
-    plt.style.use('seaborn-v0_8-darkgrid')
-    plt.figure(figsize=(14, 7))
-    couleurs = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
-    for idx, fichier in enumerate(fichiers):
-        if os.path.exists(fichier):
-            df_nettoye = nettoyer_fichier_suivi_canal(fichier)
-            annee = fichier.split()[-1].split('.')[0]
-            mois, evolution = evolution_consultants(df_nettoye, annee)
-            plt.plot(mois, evolution, marker='o', label=f"Année {annee}", color=couleurs[idx % len(couleurs)], linewidth=2)
-    plt.title("Évolution mensuelle du nombre de consultants", fontsize=18, fontweight='bold')
-    plt.xlabel("Mois", fontsize=14)
-    plt.ylabel("Nombre de consultants", fontsize=14)
-    plt.xticks(rotation=45)
-    plt.legend(title="Année", fontsize=12)
-    plt.grid(True, linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    plt.savefig(output_path)
-    plt.close()
+# def plot_evolution_consultants(fichiers, output_path="static/evolution_consultants.png"):
+#     plt.style.use('seaborn-v0_8-darkgrid')
+#     plt.figure(figsize=(14, 7))
+#     couleurs = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+#     for idx, fichier in enumerate(fichiers):
+#         if os.path.exists(fichier):
+#             df_nettoye = nettoyer_fichier_suivi_canal(fichier)
+#             annee = fichier.split()[-1].split('.')[0]
+#             mois, evolution = evolution_consultants(df_nettoye, annee)
+#             plt.plot(mois, evolution, marker='o', label=f"Année {annee}", color=couleurs[idx % len(couleurs)], linewidth=2)
+#     plt.title("Évolution mensuelle du nombre de consultants", fontsize=18, fontweight='bold')
+#     plt.xlabel("Mois", fontsize=14)
+#     plt.ylabel("Nombre de consultants", fontsize=14)
+#     plt.xticks(rotation=45)
+#     plt.legend(title="Année", fontsize=12)
+#     plt.grid(True, linestyle='--', alpha=0.6)
+#     plt.tight_layout()
+#     plt.savefig(output_path)
+#     plt.close()
 
 if __name__ == "__main__":
     import threading
